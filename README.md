@@ -1,6 +1,6 @@
 # PFIM (shiny app version)
 
-## Background
+## Background
 
 Shiny app for building networks using pfim (insert brief description of both PFIM and what the app will allow you to do). Also make very very sure to link the the Shaw preprint. 
 
