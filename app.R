@@ -12,7 +12,7 @@ source("lib/pfim.R")
 source("lib/internals.R")
 
 feeding_rules <- read.csv("data/FoodWebRules.csv")
-traits_data <- read.csv("data/TaxaShiny.csv") %>% 
+traits_data <- read.csv("data/full_dataset.csv") %>% 
   as_tibble()
 
 size_classes <- c("mega", "giant", "large", "medium", "small", "tiny", "macro", "micro", "primary")
