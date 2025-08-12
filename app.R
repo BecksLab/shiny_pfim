@@ -17,6 +17,16 @@ traits_data <- read.csv("data/TaxaShiny.csv") %>%
 
 size_classes <- c("mega", "giant", "large", "medium", "small", "tiny", "macro", "micro", "primary")
 
+feeding_rules_og <- list(mega = c("mega", "giant", "large", "medium", "macro", "micro", "primary"),
+                         giant = c("giant", "large", "medium", "small", "macro", "micro", "primary"),
+                         large = c("large", "medium", "small", "tiny", "macro", "micro", "primary"),
+                         medium = c("medium", "small", "tiny", "macro", "micro", "primary"),
+                         small = c("small", "tiny", "macro", "micro", "primary"),
+                         tiny = c("tiny", "macro", "micro", "primary"),
+                         macro = c("macro", "micro", "primary"),
+                         micro = c("micro", "primary"),
+                         primary = c("primary"))
+
 # for trophic level colours
 cols <- c(0.99, 1.99, 2.99, 3.99, 4.99, 5.99, 6.95, 1000)
 tl_cols <- c("#DDDDDD", "#26b170", "#7ed348", "#97e7f5", "#009dd1", "#a663cc", "#520380", "#a1045a")
@@ -24,11 +34,11 @@ tl_cols <- c("#DDDDDD", "#26b170", "#7ed348", "#97e7f5", "#009dd1", "#a663cc", "
 ui <- page_fill(
   
   layout_columns( 
-
+    
     card(
       h4("Consumer–Resource Rules:"),
       uiOutput("consumer_resource_inputs")
-         ), 
+    ), 
     card( 
       h4("Current Rules:"),
       tableOutput("mappingTable"),
@@ -52,7 +62,7 @@ server <- function(input, output, session) {
   observe({
     for (ct in size_classes) {
       if (is.null(mapping[[ct]])) {
-        mapping[[ct]] <- character(0)
+        mapping[[ct]] <- feeding_rules_og[[ct]]
       }
     }
   })
@@ -136,8 +146,8 @@ server <- function(input, output, session) {
   )  
   
   igraph_web <- igraph::graph_from_edgelist(infer_edgelist(traits_data, feeding_rules,
-                                                   col_taxon = "genus"), 
-                                    directed = TRUE)
+                                                           col_taxon = "genus"), 
+                                            directed = TRUE)
   
   tls <- calc_node_tl_std(as_adjacency_matrix(igraph_web))
   # Fixed colors by trophic level
@@ -149,7 +159,7 @@ server <- function(input, output, session) {
   output$webPlot_static <- renderPlot(ggnet2(igraph_web,
                                              size = 3,
                                              node.color = nodecols))
-
+  
   
   output$webPlot_dynamic <- renderPlot({
     igraph_web <- web()
