@@ -35,8 +35,10 @@ ui <- fluidPage(
     ),
     
     mainPanel(
-      h4("Blah blah blah"),
-      tableOutput("webPlot")
+      h4("Static size rules"),
+      plotOutput("webPlot_static"),
+      h4("Dynamic size rules"),
+      plotOutput("webPlot_dynamic")
     )
   )
 )
@@ -87,19 +89,38 @@ server <- function(input, output, session) {
   # create new feeding rules
   feeding_rules_updated <- 
     reactive({
-     if (nrow(mapping_df()) == 0) {
-          feeding_rules %>%
-         na.omit()
-        } else {
-          feeding_rules %>%
-            filter(trait_type_resource != "size") %>%
-            rbind(mapping_df() %>%
-                    mutate(trait_type_resource = "size",
-                           trait_type_consumer = "size"))%>%
-            na.omit()
-        }}
-      )
-
+      if (nrow(mapping_df()) == 0) {
+        feeding_rules %>%
+          na.omit()
+      } else {
+        feeding_rules %>%
+          filter(trait_type_resource != "size") %>%
+          rbind(mapping_df() %>%
+                  mutate(trait_type_resource = "size",
+                         trait_type_consumer = "size"))%>%
+          na.omit()
+      }}
+    )
+  
+  web <- reactive({
+    if (nrow(mapping_df()) == 0) {
+      
+      igraph::graph_from_edgelist(infer_edgelist(traits_data, feeding_rules), 
+                                  directed = TRUE)
+      
+    } else {
+      # use updated feeding rules
+      igraph::graph_from_edgelist(infer_edgelist(traits_data, feeding_rules_updated()), 
+                                  directed = TRUE)
+    }}
+  )  
+  
+  output$webPlot_static <- renderPlot(ggnet2(igraph::graph_from_edgelist(infer_edgelist(traits_data, feeding_rules), 
+                                                                         directed = TRUE)))
+  
+  output$webPlot_dynamic <- renderPlot({
+    ggnet2(web())
+  })
   
   
   
