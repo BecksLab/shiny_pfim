@@ -27,6 +27,8 @@ feeding_rules_og <- list(mega = c("mega", "giant", "large", "medium", "macro", "
                          micro = c("micro", "primary"),
                          primary = c("primary"))
 
+
+
 # for trophic level colours
 cols <- c(0.99, 1.99, 2.99, 3.99, 4.99, 5.99, 6.95, 1000)
 tl_cols <- c("#DDDDDD", "#26b170", "#7ed348", "#97e7f5", "#009dd1", "#a663cc", "#520380", "#a1045a")
@@ -156,9 +158,20 @@ server <- function(input, output, session) {
   # Green, yellow, dark blue, dark red,light blue, orange, brown, pink
   nodecols <- tl_cols[ii]
   
+  shps <- names(tls) %>%
+    as_tibble() %>%
+    mutate(shape = case_when(value  == "Otodus megalodon" ~ 17,
+                             .default = as.numeric(16)),
+           size = case_when(value  == "Otodus megalodon" ~ "shark",
+                             .default = "not_shark"))
+  
   output$webPlot_static <- renderPlot(ggnet2(igraph_web,
-                                             size = 3,
-                                             node.color = nodecols))
+                                             size = shps$size,
+                                             size.palette = c("shark" = 5, "not_shark" = 1),
+                                             node.color = nodecols,
+                                             shape = shps$shape,
+                                             legend.position = 'none',
+                                             edge.alpha = 0.5))
   
   
   output$webPlot_dynamic <- renderPlot({
@@ -171,8 +184,18 @@ server <- function(input, output, session) {
     # Green, yellow, dark blue, dark red,light blue, orange, brown, pink
     nodecols <- tl_cols[ii]
     
+    shps <- names(tls) %>%
+      as_tibble() %>%
+      mutate(shape = case_when(value  == "Otodus megalodon" ~ 17,
+                               .default = as.numeric(16)),
+             size = case_when(value  == "Otodus megalodon" ~ "shark",
+                              .default = "not_shark"))
+    
     ggnet2(igraph_web,
-           node.color = nodecols)
+           node.color = nodecols,
+           shape = shps$shape,
+           legend.position = 'none',
+           edge.alpha = 0.5)
   })
   
   
