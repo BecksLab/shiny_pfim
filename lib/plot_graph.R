@@ -1,5 +1,6 @@
 source("lib/internals.R")
 
+library(rgl)
 library(plyr)
 
 #' Make Components Required For 3D Foodweb
