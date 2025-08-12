@@ -9,12 +9,13 @@ library(shiny)
 # import pfim functions
 source("lib/pfim.R")
 
-feeding_rules <- read.csv("data/feeding_rules.csv")
-traits_data <- read.csv("data/traits.csv") %>% as_tibble()
+feeding_rules <- read.csv("data/FoodWebRules.csv")
+traits_data <- read.csv("data/TaxaShiny.csv") %>% 
+  as_tibble()
 
 size_classes <- 
   feeding_rules %>%
-  filter(trait_type_resource == "size") %>%
+  filter(trait_type_resource == "size_category") %>%
   distinct(trait_resource) %>%
   pull()
 
@@ -94,10 +95,10 @@ server <- function(input, output, session) {
           na.omit()
       } else {
         feeding_rules %>%
-          filter(trait_type_resource != "size") %>%
+          filter(trait_type_resource != "size_category") %>%
           rbind(mapping_df() %>%
-                  mutate(trait_type_resource = "size",
-                         trait_type_consumer = "size"))%>%
+                  mutate(trait_type_resource = "size_category",
+                         trait_type_consumer = "size_category"))%>%
           na.omit()
       }}
     )
@@ -105,17 +106,20 @@ server <- function(input, output, session) {
   web <- reactive({
     if (nrow(mapping_df()) == 0) {
       
-      igraph::graph_from_edgelist(infer_edgelist(traits_data, feeding_rules), 
+      igraph::graph_from_edgelist(infer_edgelist(traits_data, feeding_rules,
+                                                 col_taxon = "genus"), 
                                   directed = TRUE)
       
     } else {
       # use updated feeding rules
-      igraph::graph_from_edgelist(infer_edgelist(traits_data, feeding_rules_updated()), 
+      igraph::graph_from_edgelist(infer_edgelist(traits_data, feeding_rules_updated(),
+                                                 col_taxon = "genus"), 
                                   directed = TRUE)
     }}
   )  
   
-  output$webPlot_static <- renderPlot(ggnet2(igraph::graph_from_edgelist(infer_edgelist(traits_data, feeding_rules), 
+  output$webPlot_static <- renderPlot(ggnet2(igraph::graph_from_edgelist(infer_edgelist(traits_data, feeding_rules,
+                                                                                        col_taxon = "genus"), 
                                                                          directed = TRUE)))
   
   output$webPlot_dynamic <- renderPlot({
