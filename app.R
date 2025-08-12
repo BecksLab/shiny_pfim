@@ -1,3 +1,4 @@
+library(bslib)
 library(GGally)
 library(intergraph)
 library(network)
@@ -13,35 +14,28 @@ feeding_rules <- read.csv("data/FoodWebRules.csv")
 traits_data <- read.csv("data/TaxaShiny.csv") %>% 
   as_tibble()
 
-size_classes <- 
-  feeding_rules %>%
-  filter(trait_type_resource == "size_category") %>%
-  distinct(trait_resource) %>%
-  pull()
+size_classes <- c("mega", "giant", "large", "medium", "small", "tiny", "macro", "micro", "primary")
 
-ui <- fluidPage(
-  titlePanel("Consumer–Resource Trait Mapping"),
+ui <- page_fill(
   
-  sidebarLayout(
-    sidebarPanel(
-      selectInput("consumer", "Select Consumer Trait:",
-                  choices = size_classes, selected = size_classes[1]),
+  layout_columns( 
+
+    card(
+      h4("Consumer–Resource Rules:"),
+      uiOutput("consumer_resource_inputs")
+         ), 
+    card( 
+      h4("Current Rules:"),
+      tableOutput("mappingTable"),
       
-      selectizeInput("resources", "Compatible Resource Traits:",
-                     choices = size_classes,
-                     multiple = TRUE),
-      
-      h4("Current Mapping:"),
-      tableOutput("mappingTable")
-    ),
-    
-    mainPanel(
       h4("Static size rules"),
-      plotOutput("webPlot_static"),
+      plotOutput("webPlot_static")),
+    card(
       h4("Dynamic size rules"),
       plotOutput("webPlot_dynamic")
-    )
-  )
+    ),
+    col_widths = c(2, 4, 6) 
+  ) 
 )
 
 server <- function(input, output, session) {
@@ -58,16 +52,39 @@ server <- function(input, output, session) {
     }
   })
   
-  # When consumer changes, update the resources input
-  observeEvent(input$consumer, {
-    updateSelectizeInput(session, "resources",
-                         selected = mapping[[input$consumer]])
+  # Dynamically generate selectizeInputs for each consumer trait
+  output$consumer_resource_inputs <- renderUI({
+    lapply(size_classes, function(ct) {
+      selectizeInput(
+        inputId = ct,
+        label = paste(ct, "feeding classes:"),
+        choices = size_classes,
+        selected = mapping[[ct]],
+        multiple = TRUE
+      )
+    })
   })
   
-  # When resources change, save mapping
-  observeEvent(input$resources, {
-    mapping[[input$consumer]] <- input$resources
-  }, ignoreNULL = FALSE)
+  # When any of the dynamic inputs change, save the mapping
+  observe({
+    for (ct in size_classes) {
+      input_val <- input[[ct]]
+      if (!is.null(input_val)) {
+        mapping[[ct]] <- input_val
+      }
+    }
+  })
+  
+  # Display mapping table
+  output$mappingTable <- renderTable({
+    data.frame(
+      Consumer = size_classes,
+      Resources = sapply(size_classes, function(ct) {
+        paste(mapping[[ct]], collapse = ", ")
+      }),
+      stringsAsFactors = FALSE
+    )
+  })
   
   # Create long-format mapping dataframe as a reactive object
   mapping_df <- reactive({
@@ -80,11 +97,6 @@ server <- function(input, output, session) {
                    stringsAsFactors = FALSE)
       }
     }))
-  })
-  
-  # Show the mapping in the table
-  output$mappingTable <- renderTable({
-    mapping_df()
   })
   
   # create new feeding rules
@@ -120,7 +132,8 @@ server <- function(input, output, session) {
   
   output$webPlot_static <- renderPlot(ggnet2(igraph::graph_from_edgelist(infer_edgelist(traits_data, feeding_rules,
                                                                                         col_taxon = "genus"), 
-                                                                         directed = TRUE)))
+                                                                         directed = TRUE),
+                                             size = 3))
   
   output$webPlot_dynamic <- renderPlot({
     ggnet2(web())
