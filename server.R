@@ -20,31 +20,20 @@ source("lib/plot_graph.R")
 feeding_rules <- read.csv("data/feeding_rules.csv")
 traits_data <- read.csv("data/traits.csv") %>% as_tibble()
 
-# get the edge list
-edge_list <- infer_edgelist(traits_data, feeding_rules)
+# create size classes list
+# this is for the input lists
+size_classes <- 
+  feeding_rules %>%
+  filter(trait_type_resource == "size") %>%
+  distinct(trait_resource)
 
-## Make a graph object from inferred web edgelist ----
-web <- igraph::graph_from_edgelist(edge_list, directed = TRUE)
-
-make_3dfw(web) %>%
-    plot_3dfw()
 
 # Define server logic required to draw a histogram
 function(input, output, session) {
-
-    output$distPlot <- renderPlot({
-
-        # generate bins based on input$bins from ui.R
-        x    <- faithful[, 2]
-        bins <- seq(min(x), max(x), length.out = input$bins + 1)
-
-        # draw the histogram with the specified number of bins
-        hist(x, breaks = bins, col = 'darkgray', border = 'white',
-             xlab = 'Waiting time to next eruption (in mins)',
-             main = 'Histogram of waiting times')
-
-    })
-
-
-
+  
+  updateSelectizeInput(session, 'consumer_trait', choices = size_classes, selected = 'tiny')
+  
+  output$values <- renderPrint({
+    tibble(trait_resource = input$resource_trait, trait_consumer = rep(input$consumer_trait, length(input$resource_trait)))
+  })
 }
