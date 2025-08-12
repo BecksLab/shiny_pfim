@@ -1,5 +1,4 @@
 trait_type_resource,trait_resource,trait_type_consumer,trait_consumer
-size_category,giant_suspension,size_category,mega
 size_category,mega,size_category,mega
 size_category,giant,size_category,mega
 size_category,large,size_category,mega
@@ -7,7 +6,6 @@ size_category,medium,size_category,mega
 size_category,macro,size_category,mega
 size_category,micro,size_category,mega
 size_category,primary,size_category,mega
-size_category,giant_suspension,size_category,giant
 size_category,giant,size_category,giant
 size_category,large,size_category,giant
 size_category,medium,size_category,giant
