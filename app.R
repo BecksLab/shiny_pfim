@@ -1,11 +1,11 @@
 library(bslib)
 library(GGally)
+library(igraph)
 library(intergraph)
 library(network)
-library(sna)
-library(igraph)
-library(tidyverse)
 library(shiny)
+library(sna)
+library(tidyverse)
 
 # import pfim functions
 source("lib/pfim.R")
